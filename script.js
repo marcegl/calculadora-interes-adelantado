@@ -447,15 +447,20 @@ function generarTablaEncabezados() {
     // Columna de número
     tr.innerHTML += `<th class="sortable" data-column="_index" data-type="number"># <span class="sort-indicator"></span></th>`;
 
-    // Columnas del CSV
+    // Columnas del CSV (excepto la columna de monto)
     csvColumnas.forEach(col => {
-        tr.innerHTML += `<th class="sortable" data-column="${col}" data-type="string">${col} <span class="sort-indicator"></span></th>`;
+        if (col !== columnMapping.monto) {
+            tr.innerHTML += `<th class="sortable" data-column="${col}" data-type="string">${col} <span class="sort-indicator"></span></th>`;
+        }
     });
 
-    // Columnas calculadas
+    // Columnas calculadas (fechas y días)
     tr.innerHTML += `<th class="sortable" data-column="fechaVencimiento" data-type="date">Vencimiento Original <span class="sort-indicator"></span></th>`;
     tr.innerHTML += `<th class="sortable" data-column="fechaVencimientoAjustada" data-type="date">Vencimiento Ajustado <span class="sort-indicator"></span></th>`;
     tr.innerHTML += `<th class="sortable" data-column="dias" data-type="number">Días hasta Venc. <span class="sort-indicator"></span></th>`;
+
+    // Últimas 3 columnas: Monto, Descuento, Valor Efectivo
+    tr.innerHTML += `<th class="sortable" data-column="_monto" data-type="number">${columnMapping.monto} <span class="sort-indicator"></span></th>`;
     tr.innerHTML += `<th class="sortable" data-column="descuento" data-type="number">Descuento <span class="sort-indicator"></span></th>`;
     tr.innerHTML += `<th class="sortable" data-column="valorEfectivo" data-type="number">Valor Efectivo <span class="sort-indicator"></span></th>`;
 
@@ -589,7 +594,8 @@ function mostrarResultados() {
     totalValorEfectivoSpan.textContent = `$${totalValorEfectivo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Mostrar tabla
-    const totalColumnas = 1 + csvColumnas.length + 5; // # + CSV columns + 5 calculated columns
+    // Total columnas: # + (CSV excepto monto) + Venc.Original + Venc.Ajustado + Días + Monto + Descuento + Valor Efectivo
+    const totalColumnas = 1 + (csvColumnas.length - 1) + 3 + 3;
     if (pagaresFiltrados.length === 0) {
         pagaresBody.innerHTML = `<tr><td colspan="${totalColumnas}" class="loading">No hay pagarés que coincidan con los filtros</td></tr>`;
         return;
@@ -605,13 +611,15 @@ function mostrarResultados() {
         // Construir celdas dinámicamente
         let celdas = `<td>${p._index}</td>`;
 
-        // Agregar todas las columnas del CSV
+        // Agregar todas las columnas del CSV (excepto la columna de monto)
         csvColumnas.forEach(col => {
-            const valor = p[col] || '';
-            celdas += `<td>${valor}</td>`;
+            if (col !== columnMapping.monto) {
+                const valor = p[col] || '';
+                celdas += `<td>${valor}</td>`;
+            }
         });
 
-        // Agregar columnas calculadas
+        // Agregar columnas calculadas (fechas y días)
         celdas += `
             <td>${formatearFecha(p.fechaVencimiento)}</td>
             <td class="${p.fechaAjustada ? 'fecha-ajustada' : ''}">
@@ -619,6 +627,11 @@ function mostrarResultados() {
                 ${p.fechaAjustada ? '*' : ''}
             </td>
             <td class="${diasClass}">${p.dias}</td>
+        `;
+
+        // Últimas 3 columnas: Monto, Descuento, Valor Efectivo
+        celdas += `
+            <td>$${p._monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             <td class="${descuentoClass}">$${p.descuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             <td class="${valorEfectivoClass}">$${p.valorEfectivo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
         `;
@@ -649,30 +662,30 @@ function exportarACSV() {
 
     // Crear encabezados
     const encabezados = ['#'];
-    csvColumnas.forEach(col => encabezados.push(col));
-    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', 'Descuento', 'Valor Efectivo');
+    // Columnas del CSV excepto la de monto
+    csvColumnas.forEach(col => {
+        if (col !== columnMapping.monto) {
+            encabezados.push(col);
+        }
+    });
+    // Columnas calculadas y las 3 últimas
+    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', columnMapping.monto, 'Descuento', 'Valor Efectivo');
 
     // Crear filas
     const filas = pagaresFiltrados.map(p => {
         const fila = [p._index];
 
-        // Agregar columnas del CSV
+        // Agregar columnas del CSV (excepto la de monto)
         csvColumnas.forEach(col => {
-            let valor;
-
-            // Si es la columna de monto, exportar el valor numérico parseado
-            if (col === columnMapping.monto) {
-                valor = p._monto.toFixed(2);
-            } else {
-                valor = p[col] || '';
-            }
-
-            // Si el valor contiene comas o saltos de línea, envolverlo en comillas
-            const valorStr = String(valor);
-            if (valorStr.includes(',') || valorStr.includes('\n') || valorStr.includes('"')) {
-                fila.push(`"${valorStr.replace(/"/g, '""')}"`);
-            } else {
-                fila.push(valorStr);
+            if (col !== columnMapping.monto) {
+                const valor = p[col] || '';
+                // Si el valor contiene comas o saltos de línea, envolverlo en comillas
+                const valorStr = String(valor);
+                if (valorStr.includes(',') || valorStr.includes('\n') || valorStr.includes('"')) {
+                    fila.push(`"${valorStr.replace(/"/g, '""')}"`);
+                } else {
+                    fila.push(valorStr);
+                }
             }
         });
 
@@ -681,6 +694,7 @@ function exportarACSV() {
             formatearFecha(p.fechaVencimiento),
             formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
             p.dias,
+            p._monto.toFixed(2),
             p.descuento.toFixed(2),
             p.valorEfectivo.toFixed(2)
         );
@@ -728,19 +742,22 @@ function exportarAXLSX() {
 
     // Crear encabezados
     const encabezados = ['#'];
-    csvColumnas.forEach(col => encabezados.push(col));
-    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', 'Descuento', 'Valor Efectivo');
+    // Columnas del CSV excepto la de monto
+    csvColumnas.forEach(col => {
+        if (col !== columnMapping.monto) {
+            encabezados.push(col);
+        }
+    });
+    // Columnas calculadas y las 3 últimas
+    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', columnMapping.monto, 'Descuento', 'Valor Efectivo');
 
     // Crear datos
     const datos = pagaresFiltrados.map(p => {
         const fila = [p._index];
 
-        // Agregar columnas del CSV
+        // Agregar columnas del CSV (excepto la de monto)
         csvColumnas.forEach(col => {
-            // Si es la columna de monto, exportar el valor numérico parseado
-            if (col === columnMapping.monto) {
-                fila.push(p._monto);
-            } else {
+            if (col !== columnMapping.monto) {
                 fila.push(p[col] || '');
             }
         });
@@ -750,6 +767,7 @@ function exportarAXLSX() {
             formatearFecha(p.fechaVencimiento),
             formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
             p.dias,
+            parseFloat(p._monto.toFixed(2)),
             parseFloat(p.descuento.toFixed(2)),
             parseFloat(p.valorEfectivo.toFixed(2))
         );
