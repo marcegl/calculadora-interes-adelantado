@@ -151,6 +151,105 @@ header h1 {
     font-family: 'Courier New', monospace;
 }
 
+.column-mapping {
+    padding: 30px;
+    background: #fff;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.column-mapping h2 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+}
+
+.mapping-description {
+    color: #6c757d;
+    margin-bottom: 25px;
+    font-size: 0.95em;
+}
+
+.mapping-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.mapping-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mapping-item label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95em;
+}
+
+.mapping-item select {
+    padding: 10px 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 16px;
+    background: white;
+    transition: border-color 0.3s;
+}
+
+.mapping-item.required select {
+    border-color: #667eea;
+}
+
+.mapping-item select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.required-badge {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.mapping-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.mapping-actions button {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mapping-actions button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.mapping-actions button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.mapping-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .controls {
     padding: 30px;
     background: #f8f9fa;

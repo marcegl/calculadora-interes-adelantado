@@ -3,6 +3,13 @@ let pagaresData = [];
 let pagaresCalculados = [];
 let currentSortColumn = null;
 let currentSortDirection = 'asc';
+let csvColumnas = [];
+let csvDatosRaw = [];
+let columnMapping = {
+    monto: null,
+    fecha: null
+};
+let filtrosActivos = {};
 
 // Elementos del DOM
 const csvFileInput = document.getElementById('csvFile');
@@ -11,6 +18,13 @@ const separadorCamposSelect = document.getElementById('separadorCampos');
 const separadorMilesSelect = document.getElementById('separadorMiles');
 const separadorDecimalesSelect = document.getElementById('separadorDecimales');
 const ejemploNumeroSpan = document.getElementById('ejemploNumero');
+
+const columnMappingSection = document.getElementById('columnMapping');
+const columnaMontoSelect = document.getElementById('columnaMonto');
+const columnaFechaSelect = document.getElementById('columnaFecha');
+const confirmarMapeoBtn = document.getElementById('confirmarMapeoBtn');
+
+const controlsSection = document.getElementById('controlsSection');
 const tasaInteresInput = document.getElementById('tasaInteres');
 const tipoDescuentoSelect = document.getElementById('tipoDescuento');
 const baseDiasSelect = document.getElementById('baseDias');
@@ -20,9 +34,11 @@ const totalPagaresSpan = document.getElementById('totalPagares');
 const totalMontoSpan = document.getElementById('totalMonto');
 const totalInteresesSpan = document.getElementById('totalIntereses');
 const totalValorEfectivoSpan = document.getElementById('totalValorEfectivo');
+
+const filtersSection = document.getElementById('filtersSection');
+const tableSection = document.getElementById('tableSection');
+const pagaresHead = document.getElementById('pagaresHead');
 const pagaresBody = document.getElementById('pagaresBody');
-const filtroCompradorSelect = document.getElementById('filtroComprador');
-const filtroUnidadSelect = document.getElementById('filtroUnidad');
 
 // Feriados fijos de Paraguay
 const feriadosFijos = [
@@ -229,54 +245,46 @@ function cargarCSV(file) {
             const separadorCampos = separadorCamposSelect.value;
 
             // Parsear CSV
-            const lineas = text.split('\n');
-            pagaresData = [];
+            const lineas = text.split('\n').filter(l => l.trim());
+            if (lineas.length < 2) {
+                throw new Error('El archivo CSV debe tener al menos encabezados y una fila de datos');
+            }
 
-            // Saltar la primera línea (encabezados)
+            // Extraer encabezados
+            csvColumnas = lineas[0].split(separadorCampos).map(col => col.trim());
+
+            // Extraer datos (guardar raw para procesamiento posterior)
+            csvDatosRaw = [];
             for (let i = 1; i < lineas.length; i++) {
                 const linea = lineas[i].trim();
                 if (!linea) continue;
 
                 const campos = linea.split(separadorCampos);
-                if (campos.length >= 5) {
-                    const pagare = {
-                        proyecto: campos[0],
-                        comprador: campos[1],
-                        unidad: campos[2],
-                        vencimiento: campos[3],
-                        monto: parsearNumero(campos[4])
-                    };
-
-                    // Validar que el monto sea un número válido
-                    if (!isNaN(pagare.monto) && pagare.monto > 0) {
-                        pagaresData.push(pagare);
-                    }
-                }
+                const fila = {};
+                csvColumnas.forEach((col, idx) => {
+                    fila[col] = campos[idx] ? campos[idx].trim() : '';
+                });
+                csvDatosRaw.push(fila);
             }
 
-            console.log(`Cargados ${pagaresData.length} pagarés`);
-
-            // Habilitar botón de calcular
-            calcularBtn.disabled = false;
+            console.log(`CSV cargado: ${csvColumnas.length} columnas, ${csvDatosRaw.length} filas`);
 
             // Actualizar UI
-            fileNameSpan.textContent = `✓ ${file.name} (${pagaresData.length} pagarés cargados)`;
+            fileNameSpan.textContent = `✓ ${file.name} (${csvDatosRaw.length} registros, ${csvColumnas.length} columnas)`;
             fileNameSpan.classList.add('loaded');
 
-            poblarFiltros();
-            calcularIntereses();
+            // Mostrar sección de mapeo de columnas
+            mostrarMapeoColumnas();
 
         } catch (error) {
             console.error('Error al procesar CSV:', error);
-            pagaresBody.innerHTML = '<tr><td colspan="10" class="loading">Error al procesar el archivo CSV</td></tr>';
-            fileNameSpan.textContent = '✗ Error al cargar el archivo';
+            fileNameSpan.textContent = `✗ Error: ${error.message}`;
             fileNameSpan.classList.remove('loaded');
         }
     };
 
     reader.onerror = function() {
         console.error('Error al leer el archivo');
-        pagaresBody.innerHTML = '<tr><td colspan="10" class="loading">Error al leer el archivo</td></tr>';
         fileNameSpan.textContent = '✗ Error al leer el archivo';
         fileNameSpan.classList.remove('loaded');
     };
@@ -284,26 +292,169 @@ function cargarCSV(file) {
     reader.readAsText(file);
 }
 
-// Poblar filtros
-function poblarFiltros() {
-    const compradores = [...new Set(pagaresData.map(p => p.comprador))].sort();
-    const unidades = [...new Set(pagaresData.map(p => p.unidad))].sort();
+// Mostrar sección de mapeo de columnas
+function mostrarMapeoColumnas() {
+    // Poblar selectores con las columnas del CSV
+    columnaMontoSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+    columnaFechaSelect.innerHTML = '<option value="">-- Seleccione --</option>';
 
-    filtroCompradorSelect.innerHTML = '<option value="">Todos los compradores</option>';
-    compradores.forEach(comprador => {
-        const option = document.createElement('option');
-        option.value = comprador;
-        option.textContent = comprador;
-        filtroCompradorSelect.appendChild(option);
+    csvColumnas.forEach(col => {
+        const optionMonto = document.createElement('option');
+        optionMonto.value = col;
+        optionMonto.textContent = col;
+        columnaMontoSelect.appendChild(optionMonto);
+
+        const optionFecha = document.createElement('option');
+        optionFecha.value = col;
+        optionFecha.textContent = col;
+        columnaFechaSelect.appendChild(optionFecha);
     });
 
-    filtroUnidadSelect.innerHTML = '<option value="">Todas las unidades</option>';
-    unidades.forEach(unidad => {
-        const option = document.createElement('option');
-        option.value = unidad;
-        option.textContent = unidad;
-        filtroUnidadSelect.appendChild(option);
+    // Mostrar la sección
+    columnMappingSection.style.display = 'block';
+
+    // Ocultar otras secciones
+    controlsSection.style.display = 'none';
+    filtersSection.style.display = 'none';
+    tableSection.style.display = 'none';
+}
+
+// Validar mapeo de columnas
+function validarMapeo() {
+    const montoSeleccionado = columnaMontoSelect.value;
+    const fechaSeleccionada = columnaFechaSelect.value;
+
+    if (montoSeleccionado && fechaSeleccionada) {
+        confirmarMapeoBtn.disabled = false;
+    } else {
+        confirmarMapeoBtn.disabled = true;
+    }
+}
+
+// Confirmar mapeo y procesar datos
+function confirmarMapeo() {
+    columnMapping.monto = columnaMontoSelect.value;
+    columnMapping.fecha = columnaFechaSelect.value;
+
+    console.log('Mapeo confirmado:', columnMapping);
+
+    // Procesar datos con el mapeo
+    procesarDatosConMapeo();
+
+    // Ocultar mapeo, mostrar controles
+    columnMappingSection.style.display = 'none';
+    controlsSection.style.display = 'block';
+    filtersSection.style.display = 'block';
+    tableSection.style.display = 'block';
+
+    // Habilitar botón de calcular
+    calcularBtn.disabled = false;
+}
+
+// Procesar datos con el mapeo seleccionado
+function procesarDatosConMapeo() {
+    pagaresData = csvDatosRaw.map((fila, index) => {
+        const monto = parsearNumero(fila[columnMapping.monto]);
+
+        // Validar que el monto sea un número válido
+        if (isNaN(monto) || monto <= 0) {
+            return null;
+        }
+
+        return {
+            ...fila,
+            _index: index + 1,
+            _monto: monto,
+            _fecha: fila[columnMapping.fecha]
+        };
+    }).filter(p => p !== null);
+
+    console.log(`Procesados ${pagaresData.length} registros válidos`);
+
+    // Generar filtros dinámicos
+    generarFiltrosDinamicos();
+
+    // Generar encabezados de tabla
+    generarTablaEncabezados();
+
+    // Calcular intereses
+    calcularIntereses();
+}
+
+// Generar filtros dinámicos para las columnas no usadas en mapeo
+function generarFiltrosDinamicos() {
+    filtersSection.innerHTML = '';
+
+    csvColumnas.forEach(col => {
+        // Saltar las columnas ya mapeadas
+        if (col === columnMapping.monto || col === columnMapping.fecha) {
+            return;
+        }
+
+        // Obtener valores únicos para esta columna
+        const valores = [...new Set(pagaresData.map(p => p[col]))].filter(v => v).sort();
+
+        if (valores.length === 0 || valores.length > 100) {
+            // Si no hay valores o hay demasiados, no crear filtro
+            return;
+        }
+
+        // Crear filtro
+        const filterGroup = document.createElement('div');
+        filterGroup.className = 'filter-group';
+
+        const label = document.createElement('label');
+        label.textContent = `Filtrar por ${col}:`;
+        label.setAttribute('for', `filtro_${col}`);
+
+        const select = document.createElement('select');
+        select.id = `filtro_${col}`;
+        select.dataset.column = col;
+
+        const optionTodos = document.createElement('option');
+        optionTodos.value = '';
+        optionTodos.textContent = `Todos`;
+        select.appendChild(optionTodos);
+
+        valores.forEach(val => {
+            const option = document.createElement('option');
+            option.value = val;
+            option.textContent = val;
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', () => {
+            filtrosActivos[col] = select.value;
+            mostrarResultados();
+        });
+
+        filterGroup.appendChild(label);
+        filterGroup.appendChild(select);
+        filtersSection.appendChild(filterGroup);
     });
+}
+
+// Generar encabezados de tabla dinámicos
+function generarTablaEncabezados() {
+    const tr = document.createElement('tr');
+
+    // Columna de número
+    tr.innerHTML += `<th class="sortable" data-column="_index" data-type="number"># <span class="sort-indicator"></span></th>`;
+
+    // Columnas del CSV
+    csvColumnas.forEach(col => {
+        tr.innerHTML += `<th class="sortable" data-column="${col}" data-type="string">${col} <span class="sort-indicator"></span></th>`;
+    });
+
+    // Columnas calculadas
+    tr.innerHTML += `<th class="sortable" data-column="fechaVencimiento" data-type="date">Vencimiento Original <span class="sort-indicator"></span></th>`;
+    tr.innerHTML += `<th class="sortable" data-column="fechaVencimientoAjustada" data-type="date">Vencimiento Ajustado <span class="sort-indicator"></span></th>`;
+    tr.innerHTML += `<th class="sortable" data-column="dias" data-type="number">Días hasta Venc. <span class="sort-indicator"></span></th>`;
+    tr.innerHTML += `<th class="sortable" data-column="descuento" data-type="number">Descuento <span class="sort-indicator"></span></th>`;
+    tr.innerHTML += `<th class="sortable" data-column="valorEfectivo" data-type="number">Valor Efectivo <span class="sort-indicator"></span></th>`;
+
+    pagaresHead.innerHTML = '';
+    pagaresHead.appendChild(tr);
 }
 
 // Calcular intereses
@@ -316,18 +467,18 @@ function calcularIntereses() {
     const baseDias = baseDiasSelect.value;
 
     pagaresCalculados = pagaresData.map((pagare, index) => {
-        const fechaVencimiento = parsearFecha(pagare.vencimiento);
+        // Usar las columnas mapeadas
+        const fechaVencimiento = parsearFecha(pagare._fecha);
         if (!fechaVencimiento) {
             return null;
         }
 
         const fechaVencimientoAjustada = ajustarASiguienteDiaHabil(fechaVencimiento);
         const dias = calcularDias(fechaActual, fechaVencimientoAjustada);
-        const { descuento, valorEfectivo } = calcularDescuento(pagare.monto, dias, tasaAnual, tipoDescuento, baseDias);
+        const { descuento, valorEfectivo } = calcularDescuento(pagare._monto, dias, tasaAnual, tipoDescuento, baseDias);
 
         return {
             ...pagare,
-            index: index + 1,
             fechaVencimiento,
             fechaVencimientoAjustada,
             fechaAjustada: fechaVencimiento.getTime() !== fechaVencimientoAjustada.getTime(),
@@ -403,13 +554,13 @@ function mostrarResultados() {
     const fechaActual = new Date();
     fechaActualSpan.textContent = formatearFecha(fechaActual);
 
-    // Aplicar filtros
-    const filtroComprador = filtroCompradorSelect.value;
-    const filtroUnidad = filtroUnidadSelect.value;
-
+    // Aplicar filtros dinámicos
     let pagaresFiltrados = pagaresCalculados.filter(p => {
-        if (filtroComprador && p.comprador !== filtroComprador) return false;
-        if (filtroUnidad && p.unidad !== filtroUnidad) return false;
+        for (const [columna, valor] of Object.entries(filtrosActivos)) {
+            if (valor && p[columna] !== valor) {
+                return false;
+            }
+        }
         return true;
     });
 
@@ -420,7 +571,7 @@ function mostrarResultados() {
 
     // Actualizar totales
     totalPagaresSpan.textContent = pagaresFiltrados.length;
-    const totalMonto = pagaresFiltrados.reduce((sum, p) => sum + p.monto, 0);
+    const totalMonto = pagaresFiltrados.reduce((sum, p) => sum + p._monto, 0);
     const totalDescuento = pagaresFiltrados.reduce((sum, p) => sum + p.descuento, 0);
     const totalValorEfectivo = pagaresFiltrados.reduce((sum, p) => sum + p.valorEfectivo, 0);
 
@@ -429,8 +580,9 @@ function mostrarResultados() {
     totalValorEfectivoSpan.textContent = `$${totalValorEfectivo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Mostrar tabla
+    const totalColumnas = 1 + csvColumnas.length + 5; // # + CSV columns + 5 calculated columns
     if (pagaresFiltrados.length === 0) {
-        pagaresBody.innerHTML = '<tr><td colspan="10" class="loading">No hay pagarés que coincidan con los filtros</td></tr>';
+        pagaresBody.innerHTML = `<tr><td colspan="${totalColumnas}" class="loading">No hay pagarés que coincidan con los filtros</td></tr>`;
         return;
     }
 
@@ -441,23 +593,28 @@ function mostrarResultados() {
         const descuentoClass = p.descuento >= 0 ? 'monto-positivo' : 'monto-negativo';
         const valorEfectivoClass = 'monto-positivo';
 
-        return `
-            <tr class="${rowClass}">
-                <td>${p.index}</td>
-                <td>${p.proyecto}</td>
-                <td>${p.comprador}</td>
-                <td>${p.unidad}</td>
-                <td>${formatearFecha(p.fechaVencimiento)}</td>
-                <td class="${p.fechaAjustada ? 'fecha-ajustada' : ''}">
-                    ${formatearFecha(p.fechaVencimientoAjustada)}
-                    ${p.fechaAjustada ? '*' : ''}
-                </td>
-                <td class="${diasClass}">${p.dias}</td>
-                <td>$${p.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td class="${descuentoClass}">$${p.descuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td class="${valorEfectivoClass}">$${p.valorEfectivo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            </tr>
+        // Construir celdas dinámicamente
+        let celdas = `<td>${p._index}</td>`;
+
+        // Agregar todas las columnas del CSV
+        csvColumnas.forEach(col => {
+            const valor = p[col] || '';
+            celdas += `<td>${valor}</td>`;
+        });
+
+        // Agregar columnas calculadas
+        celdas += `
+            <td>${formatearFecha(p.fechaVencimiento)}</td>
+            <td class="${p.fechaAjustada ? 'fecha-ajustada' : ''}">
+                ${formatearFecha(p.fechaVencimientoAjustada)}
+                ${p.fechaAjustada ? '*' : ''}
+            </td>
+            <td class="${diasClass}">${p.dias}</td>
+            <td class="${descuentoClass}">$${p.descuento.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td class="${valorEfectivoClass}">$${p.valorEfectivo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
         `;
+
+        return `<tr class="${rowClass}">${celdas}</tr>`;
     }).join('');
 }
 
@@ -479,12 +636,15 @@ separadorCamposSelect.addEventListener('change', actualizarEjemploNumero);
 separadorMilesSelect.addEventListener('change', actualizarEjemploNumero);
 separadorDecimalesSelect.addEventListener('change', actualizarEjemploNumero);
 
+// Event listeners para mapeo de columnas
+columnaMontoSelect.addEventListener('change', validarMapeo);
+columnaFechaSelect.addEventListener('change', validarMapeo);
+confirmarMapeoBtn.addEventListener('click', confirmarMapeo);
+
 calcularBtn.addEventListener('click', calcularIntereses);
-filtroCompradorSelect.addEventListener('change', mostrarResultados);
-filtroUnidadSelect.addEventListener('change', mostrarResultados);
 
 // Event listener para ordenamiento de columnas
-document.querySelector('thead').addEventListener('click', handleColumnHeaderClick);
+pagaresHead.addEventListener('click', handleColumnHeaderClick);
 
 // Inicializar ejemplo de número
 actualizarEjemploNumero();

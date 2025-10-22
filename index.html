@@ -62,7 +62,34 @@
             </div>
         </section>
 
-        <section class="controls">
+        <section class="column-mapping" id="columnMapping" style="display: none;">
+            <h2>Mapeo de Columnas</h2>
+            <p class="mapping-description">Seleccione qué columnas de su CSV corresponden a cada campo:</p>
+
+            <div class="mapping-grid">
+                <div class="mapping-item required">
+                    <label for="columnaMonto">Columna de Monto:</label>
+                    <select id="columnaMonto">
+                        <option value="">-- Seleccione --</option>
+                    </select>
+                    <span class="required-badge">Requerido</span>
+                </div>
+
+                <div class="mapping-item required">
+                    <label for="columnaFecha">Columna de Fecha de Vencimiento:</label>
+                    <select id="columnaFecha">
+                        <option value="">-- Seleccione --</option>
+                    </select>
+                    <span class="required-badge">Requerido</span>
+                </div>
+            </div>
+
+            <div class="mapping-actions">
+                <button id="confirmarMapeoBtn" disabled>Confirmar Mapeo y Continuar</button>
+            </div>
+        </section>
+
+        <section class="controls" id="controlsSection" style="display: none;">
             <div class="control-group">
                 <label for="tasaInteres">Tasa de Interés Anual (%):</label>
                 <input type="number" id="tasaInteres" value="10" min="0" max="100" step="0.1">
@@ -106,41 +133,17 @@
             </div>
         </section>
 
-        <section class="filters">
-            <div class="filter-group">
-                <label for="filtroComprador">Filtrar por Comprador:</label>
-                <select id="filtroComprador">
-                    <option value="">Todos los compradores</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="filtroUnidad">Filtrar por Unidad:</label>
-                <select id="filtroUnidad">
-                    <option value="">Todas las unidades</option>
-                </select>
-            </div>
+        <section class="filters" id="filtersSection" style="display: none;">
+            <!-- Los filtros se generarán dinámicamente aquí -->
         </section>
 
-        <section class="table-container">
+        <section class="table-container" id="tableSection" style="display: none;">
             <table id="pagaresTable">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-column="index" data-type="number"># <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="proyecto" data-type="string">Proyecto <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="comprador" data-type="string">Comprador <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="unidad" data-type="string">Unidad <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="fechaVencimiento" data-type="date">Vencimiento Original <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="fechaVencimientoAjustada" data-type="date">Vencimiento Ajustado <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="dias" data-type="number">Días hasta Venc. <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="monto" data-type="number">Monto USD <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="descuento" data-type="number">Descuento USD <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-column="valorEfectivo" data-type="number">Valor Efectivo USD <span class="sort-indicator"></span></th>
-                    </tr>
+                <thead id="pagaresHead">
+                    <!-- Los encabezados se generarán dinámicamente -->
                 </thead>
                 <tbody id="pagaresBody">
-                    <tr>
-                        <td colspan="10" class="loading">Por favor, cargue un archivo CSV para comenzar</td>
-                    </tr>
+                    <!-- Los datos se generarán dinámicamente -->
                 </tbody>
             </table>
         </section>
