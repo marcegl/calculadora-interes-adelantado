@@ -352,6 +352,31 @@ header h1 {
     color: #212529;
 }
 
+.info-item .date-input {
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #212529;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 200px;
+}
+
+.info-item .date-input:hover {
+    border-color: #764ba2;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.info-item .date-input:focus {
+    outline: none;
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
 .filters {
     padding: 20px 30px;
     background: #fff;

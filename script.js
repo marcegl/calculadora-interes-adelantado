@@ -11,6 +11,7 @@ let columnMapping = {
 };
 let filtrosActivos = {};
 let archivoCSVActual = null;
+let fechaSeleccionada = new Date(); // Fecha seleccionada por el usuario
 
 // Elementos del DOM
 const csvFileInput = document.getElementById('csvFile');
@@ -32,7 +33,7 @@ const baseDiasSelect = document.getElementById('baseDias');
 const calcularBtn = document.getElementById('calcularBtn');
 const formatoExportarSelect = document.getElementById('formatoExportar');
 const exportarBtn = document.getElementById('exportarBtn');
-const fechaActualSpan = document.getElementById('fechaActual');
+const fechaActualInput = document.getElementById('fechaActual');
 const totalPagaresSpan = document.getElementById('totalPagares');
 const totalMontoSpan = document.getElementById('totalMonto');
 const totalInteresesSpan = document.getElementById('totalIntereses');
@@ -194,6 +195,20 @@ function formatearFecha(fecha) {
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const year = fecha.getFullYear();
     return `${dia}/${mes}/${year}`;
+}
+
+// Formatear fecha para input type="date" (YYYY-MM-DD)
+function formatearFechaParaInput(fecha) {
+    const year = fecha.getFullYear();
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    return `${year}-${mes}-${dia}`;
+}
+
+// Parsear fecha desde input type="date" (YYYY-MM-DD)
+function parsearFechaDeInput(fechaStr) {
+    const fecha = new Date(fechaStr + 'T00:00:00');
+    return fecha;
 }
 
 // Calcular días entre dos fechas
@@ -470,7 +485,8 @@ function generarTablaEncabezados() {
 
 // Calcular intereses
 function calcularIntereses() {
-    const fechaActual = new Date();
+    // Usar la fecha seleccionada por el usuario
+    const fechaActual = new Date(fechaSeleccionada);
     fechaActual.setHours(0, 0, 0, 0);
 
     const tasaAnual = parseFloat(tasaInteresInput.value) || 0;
@@ -565,9 +581,6 @@ function handleColumnHeaderClick(e) {
 
 // Mostrar resultados
 function mostrarResultados() {
-    const fechaActual = new Date();
-    fechaActualSpan.textContent = formatearFecha(fechaActual);
-
     // Aplicar filtros dinámicos
     let pagaresFiltrados = pagaresCalculados.filter(p => {
         for (const [columna, valor] of Object.entries(filtrosActivos)) {
@@ -642,8 +655,7 @@ function mostrarResultados() {
 
 // Exportar tabla a CSV
 function exportarACSV() {
-    const fechaActual = new Date();
-    const timestamp = formatearFecha(fechaActual).replace(/\//g, '-');
+    const timestamp = formatearFecha(fechaSeleccionada).replace(/\//g, '-');
 
     // Aplicar filtros dinámicos
     let pagaresFiltrados = pagaresCalculados.filter(p => {
@@ -722,8 +734,7 @@ function exportarACSV() {
 
 // Exportar tabla a XLSX
 function exportarAXLSX() {
-    const fechaActual = new Date();
-    const timestamp = formatearFecha(fechaActual).replace(/\//g, '-');
+    const timestamp = formatearFecha(fechaSeleccionada).replace(/\//g, '-');
 
     // Aplicar filtros dinámicos
     let pagaresFiltrados = pagaresCalculados.filter(p => {
@@ -860,6 +871,18 @@ exportarBtn.addEventListener('click', exportarTabla);
 
 // Event listener para ordenamiento de columnas
 pagaresHead.addEventListener('click', handleColumnHeaderClick);
+
+// Event listener para cambio de fecha
+fechaActualInput.addEventListener('change', function(e) {
+    fechaSeleccionada = parsearFechaDeInput(e.target.value);
+    // Recalcular si ya hay datos cargados
+    if (pagaresData.length > 0) {
+        calcularIntereses();
+    }
+});
+
+// Inicializar el input de fecha con la fecha actual
+fechaActualInput.value = formatearFechaParaInput(fechaSeleccionada);
 
 // Inicializar ejemplo de número
 actualizarEjemploNumero();
