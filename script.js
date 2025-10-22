@@ -29,6 +29,8 @@ const tasaInteresInput = document.getElementById('tasaInteres');
 const tipoDescuentoSelect = document.getElementById('tipoDescuento');
 const baseDiasSelect = document.getElementById('baseDias');
 const calcularBtn = document.getElementById('calcularBtn');
+const formatoExportarSelect = document.getElementById('formatoExportar');
+const exportarBtn = document.getElementById('exportarBtn');
 const fechaActualSpan = document.getElementById('fechaActual');
 const totalPagaresSpan = document.getElementById('totalPagares');
 const totalMontoSpan = document.getElementById('totalMonto');
@@ -488,6 +490,9 @@ function calcularIntereses() {
         };
     }).filter(p => p !== null);
 
+    // Habilitar botón de exportar
+    exportarBtn.disabled = false;
+
     mostrarResultados();
 }
 
@@ -618,6 +623,159 @@ function mostrarResultados() {
     }).join('');
 }
 
+// Exportar tabla a CSV
+function exportarACSV() {
+    const fechaActual = new Date();
+    const timestamp = formatearFecha(fechaActual).replace(/\//g, '-');
+
+    // Aplicar filtros dinámicos
+    let pagaresFiltrados = pagaresCalculados.filter(p => {
+        for (const [columna, valor] of Object.entries(filtrosActivos)) {
+            if (valor && p[columna] !== valor) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    // Aplicar ordenamiento si hay una columna seleccionada
+    if (currentSortColumn) {
+        pagaresFiltrados = ordenarPagares(pagaresFiltrados, currentSortColumn, currentSortDirection);
+    }
+
+    // Crear encabezados
+    const encabezados = ['#'];
+    csvColumnas.forEach(col => encabezados.push(col));
+    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', 'Descuento', 'Valor Efectivo');
+
+    // Crear filas
+    const filas = pagaresFiltrados.map(p => {
+        const fila = [p._index];
+
+        // Agregar columnas del CSV
+        csvColumnas.forEach(col => {
+            const valor = p[col] || '';
+            // Si el valor contiene comas o saltos de línea, envolverlo en comillas
+            if (valor.includes(',') || valor.includes('\n') || valor.includes('"')) {
+                fila.push(`"${valor.replace(/"/g, '""')}"`);
+            } else {
+                fila.push(valor);
+            }
+        });
+
+        // Agregar columnas calculadas
+        fila.push(
+            formatearFecha(p.fechaVencimiento),
+            formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
+            p.dias,
+            p.descuento.toFixed(2),
+            p.valorEfectivo.toFixed(2)
+        );
+
+        return fila;
+    });
+
+    // Combinar todo
+    const csvContent = [encabezados, ...filas]
+        .map(fila => fila.join(','))
+        .join('\n');
+
+    // Crear blob y descargar
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `pagares_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Exportar tabla a XLSX
+function exportarAXLSX() {
+    const fechaActual = new Date();
+    const timestamp = formatearFecha(fechaActual).replace(/\//g, '-');
+
+    // Aplicar filtros dinámicos
+    let pagaresFiltrados = pagaresCalculados.filter(p => {
+        for (const [columna, valor] of Object.entries(filtrosActivos)) {
+            if (valor && p[columna] !== valor) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    // Aplicar ordenamiento si hay una columna seleccionada
+    if (currentSortColumn) {
+        pagaresFiltrados = ordenarPagares(pagaresFiltrados, currentSortColumn, currentSortDirection);
+    }
+
+    // Crear encabezados
+    const encabezados = ['#'];
+    csvColumnas.forEach(col => encabezados.push(col));
+    encabezados.push('Vencimiento Original', 'Vencimiento Ajustado', 'Días hasta Venc.', 'Descuento', 'Valor Efectivo');
+
+    // Crear datos
+    const datos = pagaresFiltrados.map(p => {
+        const fila = [p._index];
+
+        // Agregar columnas del CSV
+        csvColumnas.forEach(col => {
+            fila.push(p[col] || '');
+        });
+
+        // Agregar columnas calculadas
+        fila.push(
+            formatearFecha(p.fechaVencimiento),
+            formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
+            p.dias,
+            p.descuento,
+            p.valorEfectivo
+        );
+
+        return fila;
+    });
+
+    // Crear workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([encabezados, ...datos]);
+
+    // Ajustar anchos de columna
+    const colWidths = encabezados.map((_, i) => {
+        const maxLength = Math.max(
+            encabezados[i].length,
+            ...datos.map(row => String(row[i] || '').length)
+        );
+        return { wch: Math.min(maxLength + 2, 50) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Agregar hoja al workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Pagarés');
+
+    // Descargar archivo
+    XLSX.writeFile(wb, `pagares_${timestamp}.xlsx`);
+}
+
+// Exportar tabla según formato seleccionado
+function exportarTabla() {
+    const formato = formatoExportarSelect.value;
+
+    if (pagaresCalculados.length === 0) {
+        alert('No hay datos para exportar. Por favor, cargue un archivo CSV y calcule los intereses primero.');
+        return;
+    }
+
+    if (formato === 'csv') {
+        exportarACSV();
+    } else if (formato === 'xlsx') {
+        exportarAXLSX();
+    }
+}
+
 // Event listeners
 csvFileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -642,6 +800,7 @@ columnaFechaSelect.addEventListener('change', validarMapeo);
 confirmarMapeoBtn.addEventListener('click', confirmarMapeo);
 
 calcularBtn.addEventListener('click', calcularIntereses);
+exportarBtn.addEventListener('click', exportarTabla);
 
 // Event listener para ordenamiento de columnas
 pagaresHead.addEventListener('click', handleColumnHeaderClick);

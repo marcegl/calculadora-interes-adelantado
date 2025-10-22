@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Interés Adelantado</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -107,6 +108,14 @@
                 </select>
 
                 <button id="calcularBtn" disabled>Calcular Intereses</button>
+
+                <label for="formatoExportar">Exportar como:</label>
+                <select id="formatoExportar">
+                    <option value="csv">CSV</option>
+                    <option value="xlsx">Excel (XLSX)</option>
+                </select>
+
+                <button id="exportarBtn" disabled>Exportar Tabla</button>
             </div>
 
             <div class="info-panel">
