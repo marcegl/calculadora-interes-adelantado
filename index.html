@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Intereses - Pagarés Nostrum</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Intereses - Pagarés Nostrum Trinidad</h1>
+            <p class="subtitle">Octubre 2026 - Octubre 2029</p>
+        </header>
+
+        <section class="file-upload">
+            <div class="upload-group">
+                <label for="csvFile" class="upload-label">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Seleccionar archivo CSV
+                </label>
+                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                <span id="fileName" class="file-name">Ningún archivo seleccionado</span>
+            </div>
+
+            <div class="csv-config">
+                <h3>Configuración de CSV</h3>
+                <div class="config-row">
+                    <div class="config-item">
+                        <label for="separadorCampos">Separador de campos:</label>
+                        <select id="separadorCampos">
+                            <option value=";">Punto y coma (;)</option>
+                            <option value=",">Coma (,)</option>
+                            <option value="|">Pipe (|)</option>
+                            <option value="	">Tab</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label for="separadorMiles">Separador de miles:</label>
+                        <select id="separadorMiles">
+                            <option value=".">Punto (.) - ej: 1.200</option>
+                            <option value=",">Coma (,) - ej: 1,200</option>
+                            <option value="">Ninguno - ej: 1200</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label for="separadorDecimales">Separador de decimales:</label>
+                        <select id="separadorDecimales">
+                            <option value=",">Coma (,) - ej: 1,50</option>
+                            <option value=".">Punto (.) - ej: 1.50</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="config-example">
+                    <strong>Ejemplo con configuración actual:</strong>
+                    <span id="ejemploNumero">1.200,50 → 1200.50</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls">
+            <div class="control-group">
+                <label for="tasaInteres">Tasa de Interés Anual (%):</label>
+                <input type="number" id="tasaInteres" value="10" min="0" max="100" step="0.1">
+
+                <label for="tipoDescuento">Tipo de Descuento:</label>
+                <select id="tipoDescuento">
+                    <option value="comercial">Comercial/Bancario</option>
+                    <option value="racional">Racional/Matemático</option>
+                </select>
+
+                <label for="baseDias">Base de Días:</label>
+                <select id="baseDias">
+                    <option value="360">360 días (año comercial)</option>
+                    <option value="365">365 días (año natural)</option>
+                </select>
+
+                <button id="calcularBtn" disabled>Calcular Intereses</button>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-item">
+                    <span class="label">Fecha Actual:</span>
+                    <span id="fechaActual" class="value"></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Total de Pagarés:</span>
+                    <span id="totalPagares" class="value">0</span>
+                </div>
+                <div class="info-item highlight">
+                    <span class="label">Total Monto USD:</span>
+                    <span id="totalMonto" class="value">$0.00</span>
+                </div>
+                <div class="info-item highlight">
+                    <span class="label">Total Descuento USD:</span>
+                    <span id="totalIntereses" class="value">$0.00</span>
+                </div>
+                <div class="info-item highlight">
+                    <span class="label">Total Valor Efectivo USD:</span>
+                    <span id="totalValorEfectivo" class="value">$0.00</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="filters">
+            <div class="filter-group">
+                <label for="filtroComprador">Filtrar por Comprador:</label>
+                <select id="filtroComprador">
+                    <option value="">Todos los compradores</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filtroUnidad">Filtrar por Unidad:</label>
+                <select id="filtroUnidad">
+                    <option value="">Todas las unidades</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="table-container">
+            <table id="pagaresTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column="index" data-type="number"># <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="proyecto" data-type="string">Proyecto <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="comprador" data-type="string">Comprador <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="unidad" data-type="string">Unidad <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="fechaVencimiento" data-type="date">Vencimiento Original <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="fechaVencimientoAjustada" data-type="date">Vencimiento Ajustado <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="dias" data-type="number">Días hasta Venc. <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="monto" data-type="number">Monto USD <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="descuento" data-type="number">Descuento USD <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-column="valorEfectivo" data-type="number">Valor Efectivo USD <span class="sort-indicator"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="pagaresBody">
+                    <tr>
+                        <td colspan="10" class="loading">Por favor, cargue un archivo CSV para comenzar</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <p>* Los vencimientos que caen en días no hábiles (fines de semana o feriados de Paraguay) se ajustan al primer día hábil siguiente.</p>
+            <p>** Descuento Comercial/Bancario: Descuento = Monto × Tasa × (Días/Base). Valor Efectivo = Monto - Descuento.</p>
+            <p>*** Descuento Racional/Matemático: Valor Efectivo = Monto / (1 + Tasa × (Días/Base)). Descuento = Monto - Valor Efectivo.</p>
+            <p>**** Haga click en cualquier encabezado de columna para ordenar los datos de forma ascendente/descendente.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
