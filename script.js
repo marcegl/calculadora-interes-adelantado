@@ -10,6 +10,7 @@ let columnMapping = {
     fecha: null
 };
 let filtrosActivos = {};
+let archivoCSVActual = null;
 
 // Elementos del DOM
 const csvFileInput = document.getElementById('csvFile');
@@ -239,6 +240,9 @@ function calcularDescuento(monto, dias, tasaAnual, tipoDescuento, baseDias) {
 
 // Cargar CSV desde archivo
 function cargarCSV(file) {
+    // Guardar referencia al archivo
+    archivoCSVActual = file;
+
     const reader = new FileReader();
 
     reader.onload = function(e) {
@@ -468,7 +472,7 @@ function calcularIntereses() {
     const tipoDescuento = tipoDescuentoSelect.value;
     const baseDias = baseDiasSelect.value;
 
-    pagaresCalculados = pagaresData.map((pagare, index) => {
+    pagaresCalculados = pagaresData.map((pagare) => {
         // Usar las columnas mapeadas
         const fechaVencimiento = parsearFecha(pagare._fecha);
         if (!fechaVencimiento) {
@@ -804,9 +808,29 @@ csvFileInput.addEventListener('change', function(e) {
     }
 });
 
-separadorCamposSelect.addEventListener('change', actualizarEjemploNumero);
-separadorMilesSelect.addEventListener('change', actualizarEjemploNumero);
-separadorDecimalesSelect.addEventListener('change', actualizarEjemploNumero);
+separadorCamposSelect.addEventListener('change', function() {
+    actualizarEjemploNumero();
+    // Reprocesar CSV si hay un archivo cargado
+    if (archivoCSVActual) {
+        cargarCSV(archivoCSVActual);
+    }
+});
+
+separadorMilesSelect.addEventListener('change', function() {
+    actualizarEjemploNumero();
+    // Reprocesar CSV si hay un archivo cargado y ya fue mapeado
+    if (archivoCSVActual && columnMapping.monto && columnMapping.fecha) {
+        cargarCSV(archivoCSVActual);
+    }
+});
+
+separadorDecimalesSelect.addEventListener('change', function() {
+    actualizarEjemploNumero();
+    // Reprocesar CSV si hay un archivo cargado y ya fue mapeado
+    if (archivoCSVActual && columnMapping.monto && columnMapping.fecha) {
+        cargarCSV(archivoCSVActual);
+    }
+});
 
 // Event listeners para mapeo de columnas
 columnaMontoSelect.addEventListener('change', validarMapeo);
