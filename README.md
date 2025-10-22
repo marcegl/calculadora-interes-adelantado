@@ -1,10 +1,10 @@
-# Calculadora de Descuento de Pagarés - Nostrum Trinidad
+# Calculadora de Interés Adelantado
 
-Aplicación web para calcular el descuento de pagarés con interés adelantado, diseñada para el proyecto Nostrum Trinidad.
+Aplicación web para calcular el descuento de pagarés y cheques con interés adelantado.
 
 ## 🌐 Demo en Vivo
 
-**[Ver Aplicación](https://marcegl.github.io/calculadora-pagares-nostrum/)**
+**[Ver Aplicación](https://marcegl.github.io/calculadora-interes-adelantado/)**
 
 ## ✨ Características
 
@@ -51,8 +51,8 @@ Aplicación web para calcular el descuento de pagarés con interés adelantado, 
 
 ```csv
 Proyecto;Comprador;Unidad;Vencimiento Pagares;Monto USD
-Nostrum Trinidad;Juan Pérez;604;20/10/26;1.200
-Nostrum Trinidad;María González;804;30/11/26;2.500
+Proyecto 1;Juan Pérez;604;20/10/26;1.200
+Proyecto 1;María González;804;30/11/26;2.500
 ```
 
 **Nota**: Los separadores son configurables desde la interfaz.
@@ -79,7 +79,7 @@ Nostrum Trinidad;María González;804;30/11/26;2.500
 
 ## 📄 Licencia
 
-Este proyecto fue creado para uso específico del proyecto Nostrum Trinidad.
+Proyecto de código abierto disponible para uso general.
 
 ## 🤖 Desarrollado con
 
@@ -87,4 +87,4 @@ Este proyecto fue generado con [Claude Code](https://claude.com/claude-code)
 
 ---
 
-**Repositorio**: [github.com/marcegl/calculadora-pagares-nostrum](https://github.com/marcegl/calculadora-pagares-nostrum)
+**Repositorio**: [github.com/marcegl/calculadora-interes-adelantado](https://github.com/marcegl/calculadora-interes-adelantado)
