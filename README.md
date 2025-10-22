@@ -50,7 +50,7 @@ Aplicación web para calcular el descuento de pagarés y cheques con interés ad
 ## 📋 Formato del CSV
 
 ```csv
-Proyecto;Comprador;Unidad;Vencimiento Pagares;Monto USD
+Proyecto;Comprador;Unidad;Vencimiento Pagares;Monto
 Proyecto 1;Juan Pérez;604;20/10/26;1.200
 Proyecto 1;María González;804;30/11/26;2.500
 ```
