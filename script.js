@@ -654,16 +654,25 @@ function exportarACSV() {
 
         // Agregar columnas del CSV
         csvColumnas.forEach(col => {
-            const valor = p[col] || '';
-            // Si el valor contiene comas o saltos de línea, envolverlo en comillas
-            if (valor.includes(',') || valor.includes('\n') || valor.includes('"')) {
-                fila.push(`"${valor.replace(/"/g, '""')}"`);
+            let valor;
+
+            // Si es la columna de monto, exportar el valor numérico parseado
+            if (col === columnMapping.monto) {
+                valor = p._monto.toFixed(2);
             } else {
-                fila.push(valor);
+                valor = p[col] || '';
+            }
+
+            // Si el valor contiene comas o saltos de línea, envolverlo en comillas
+            const valorStr = String(valor);
+            if (valorStr.includes(',') || valorStr.includes('\n') || valorStr.includes('"')) {
+                fila.push(`"${valorStr.replace(/"/g, '""')}"`);
+            } else {
+                fila.push(valorStr);
             }
         });
 
-        // Agregar columnas calculadas
+        // Agregar columnas calculadas (con 2 decimales)
         fila.push(
             formatearFecha(p.fechaVencimiento),
             formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
@@ -724,16 +733,21 @@ function exportarAXLSX() {
 
         // Agregar columnas del CSV
         csvColumnas.forEach(col => {
-            fila.push(p[col] || '');
+            // Si es la columna de monto, exportar el valor numérico parseado
+            if (col === columnMapping.monto) {
+                fila.push(p._monto);
+            } else {
+                fila.push(p[col] || '');
+            }
         });
 
-        // Agregar columnas calculadas
+        // Agregar columnas calculadas (redondear a 2 decimales)
         fila.push(
             formatearFecha(p.fechaVencimiento),
             formatearFecha(p.fechaVencimientoAjustada) + (p.fechaAjustada ? '*' : ''),
             p.dias,
-            p.descuento,
-            p.valorEfectivo
+            parseFloat(p.descuento.toFixed(2)),
+            parseFloat(p.valorEfectivo.toFixed(2))
         );
 
         return fila;
