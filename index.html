@@ -3,18 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Interés Adelantado</title>
+
+    <!-- SEO Meta Tags -->
+    <title>Calculadora de Interés Adelantado | Descuento de Pagarés y Cheques</title>
+    <meta name="description" content="Calculadora online gratuita para calcular descuentos de pagarés y cheques con interés adelantado. Soporta descuento comercial/bancario y racional/matemático. Procesa CSV con ajuste automático de días hábiles y feriados de Paraguay.">
+    <meta name="keywords" content="calculadora interés adelantado, descuento pagarés, descuento cheques, interés comercial, interés bancario, descuento racional, calculadora financiera, pagarés Paraguay, días hábiles, feriados Paraguay">
+    <meta name="author" content="Calculadora de Interés Adelantado">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://marcegl.github.io/calculadora-interes-adelantado/">
+    <meta property="og:title" content="Calculadora de Interés Adelantado | Descuento de Pagarés y Cheques">
+    <meta property="og:description" content="Calculadora online gratuita para descuento de pagarés y cheques. Procesa archivos CSV, ajusta días no hábiles y calcula interés comercial o racional.">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://marcegl.github.io/calculadora-interes-adelantado/">
+    <meta property="twitter:title" content="Calculadora de Interés Adelantado | Descuento de Pagarés y Cheques">
+    <meta property="twitter:description" content="Calculadora online gratuita para descuento de pagarés y cheques. Procesa archivos CSV, ajusta días no hábiles y calcula interés comercial o racional.">
+
+    <!-- Canonical URL -->
+    <meta name="canonical" content="https://marcegl.github.io/calculadora-interes-adelantado/">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Calculadora de Interés Adelantado",
+        "description": "Calculadora online para descuento de pagarés y cheques con interés adelantado, procesamiento de CSV y ajuste automático de días hábiles",
+        "url": "https://marcegl.github.io/calculadora-interes-adelantado/",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "Descuento Comercial/Bancario",
+            "Descuento Racional/Matemático",
+            "Importación de archivos CSV",
+            "Ajuste automático de días no hábiles",
+            "Feriados de Paraguay",
+            "Exportación a CSV y Excel",
+            "Filtros dinámicos",
+            "Ordenamiento de columnas"
+        ]
+    }
+    </script>
 </head>
-<body>
+<body itemscope itemtype="https://schema.org/WebPage">
     <div class="container">
-        <header>
-            <h1>Calculadora de Interés Adelantado</h1>
-            <p class="subtitle">Descuento de Pagarés y Cheques</p>
+        <header role="banner">
+            <h1 itemprop="name">Calculadora de Interés Adelantado</h1>
+            <p class="subtitle" itemprop="description">Descuento de Pagarés y Cheques</p>
         </header>
 
-        <section class="file-upload">
+        <section class="file-upload" aria-label="Cargar archivo CSV">
             <div class="upload-group">
                 <label for="csvFile" class="upload-label">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -63,7 +118,7 @@
             </div>
         </section>
 
-        <section class="column-mapping" id="columnMapping" style="display: none;">
+        <section class="column-mapping" id="columnMapping" style="display: none;" aria-label="Mapeo de columnas CSV">
             <h2>Mapeo de Columnas</h2>
             <p class="mapping-description">Seleccione qué columnas de su CSV corresponden a cada campo:</p>
 
@@ -90,7 +145,7 @@
             </div>
         </section>
 
-        <section class="controls" id="controlsSection" style="display: none;">
+        <section class="controls" id="controlsSection" style="display: none;" aria-label="Controles de cálculo y exportación">
             <div class="control-group">
                 <label for="tasaInteres">Tasa de Interés Anual (%):</label>
                 <input type="number" id="tasaInteres" value="10" min="0" max="100" step="0.1">
@@ -142,11 +197,11 @@
             </div>
         </section>
 
-        <section class="filters" id="filtersSection" style="display: none;">
+        <section class="filters" id="filtersSection" style="display: none;" aria-label="Filtros de datos">
             <!-- Los filtros se generarán dinámicamente aquí -->
         </section>
 
-        <section class="table-container" id="tableSection" style="display: none;">
+        <section class="table-container" id="tableSection" style="display: none;" role="region" aria-label="Tabla de resultados">
             <table id="pagaresTable">
                 <thead id="pagaresHead">
                     <!-- Los encabezados se generarán dinámicamente -->
@@ -157,11 +212,11 @@
             </table>
         </section>
 
-        <footer>
-            <p>* Los vencimientos que caen en días no hábiles (fines de semana o feriados de Paraguay) se ajustan al primer día hábil siguiente.</p>
-            <p>** Descuento Comercial/Bancario: Descuento = Monto × Tasa × (Días/Base). Valor Efectivo = Monto - Descuento.</p>
-            <p>*** Descuento Racional/Matemático: Valor Efectivo = Monto / (1 + Tasa × (Días/Base)). Descuento = Monto - Valor Efectivo.</p>
-            <p>**** Haga click en cualquier encabezado de columna para ordenar los datos de forma ascendente/descendente.</p>
+        <footer role="contentinfo">
+            <p><strong>*</strong> Los vencimientos que caen en días no hábiles (fines de semana o feriados de Paraguay) se ajustan al primer día hábil siguiente.</p>
+            <p><strong>**</strong> Descuento Comercial/Bancario: Descuento = Monto × Tasa × (Días/Base). Valor Efectivo = Monto - Descuento.</p>
+            <p><strong>***</strong> Descuento Racional/Matemático: Valor Efectivo = Monto / (1 + Tasa × (Días/Base)). Descuento = Monto - Valor Efectivo.</p>
+            <p><strong>****</strong> Haga click en cualquier encabezado de columna para ordenar los datos de forma ascendente/descendente.</p>
         </footer>
     </div>
 
